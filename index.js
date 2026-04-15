@@ -2,6 +2,15 @@ require("dotenv").config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { Client, GatewayIntentBits } = require("discord.js");
 
+// --- Renderのタイムアウト対策（ここから） ---
+// RenderのWeb Serviceが「起動失敗」と判断するのを防ぐためのダミーサーバー
+const http = require("http");
+http.createServer((req, res) => {
+  res.write("Bot is online!");
+  res.end();
+}).listen(process.env.PORT || 8080);
+// --- Renderのタイムアウト対策（ここまで） ---
+
 // Geminiの設定
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
@@ -46,10 +55,10 @@ client.on("messageCreate", async (message) => {
   if (message.content.startsWith("!評論 ")) {
     const text = message.content.replace("!評論 ", "").trim();
     
-    // 現在のモードを取得（書き換え可能にするため let を使用）
+    // 現在のモードを取得
     let currentMode = serverModes.get(guildId);
 
-    // ★ ここに追加：語尾が「？」または「?」なら強制的に喧嘩腰モードへ
+    // 語尾が「？」または「?」なら強制的に喧嘩腰モードへ
     if (text.endsWith("？") || text.endsWith("?")) {
       currentMode = "angry";
     }
